@@ -2,11 +2,12 @@
 
 ## live-build(7) - System Build Scripts
 ## Copyright (C) 2006-2014 Daniel Baumann <mail@daniel-baumann.ch>
+## Slightly modified by Eugenio "g7" Paolantonio <me@medesimo.eu> to
+## support UEFI in an ugly way.
 ##
 ## This program comes with ABSOLUTELY NO WARRANTY; for details see COPYING.
 ## This is free software, and you are welcome to redistribute it
 ## under certain conditions; see COPYING for details.
-
 
 set -e
 
@@ -82,11 +83,12 @@ fi
 # Handle xorriso generic options
 XORRISO_OPTIONS="-R -r -J -joliet-long -l -cache-inodes"
 
+
 # Handle xorriso live-build specific options
-if [ "${LIVE_IMAGE_TYPE}" = "iso-hybrid" ]
-then
-	XORRISO_OPTIONS="${XORRISO_OPTIONS} -isohybrid-mbr ${_ISOHDPFX} -partition_offset 16"
-fi
+#if [ "${LIVE_IMAGE_TYPE}" = "iso-hybrid" ]
+#then
+#	XORRISO_OPTIONS="${XORRISO_OPTIONS} -isohybrid-mbr ${_ISOHDPFX} -partition_offset 16"
+#fi
 
 if [ "${_QUIET}" = "true" ]
 then
@@ -129,6 +131,20 @@ case "${LB_BOOTLOADER}" in
 	grub2)
 		XORRISO_OPTIONS="${XORRISO_OPTIONS} -no-emul-boot -boot-load-size 4 -boot-info-table"
 		XORRISO_OPTIONS="${XORRISO_OPTIONS} -b boot/grub/grub_eltorito -J"
+		# Is efi/ there?
+		if [ -e binary/efi.img ]; then
+			XORRISO_OPTIONS="${XORRISO_OPTIONS} -eltorito-alt-boot --efi-boot efi.img"
+			XORRISO_OPTIONS="${XORRISO_OPTIONS} -append_partition 2 0x01 binary/efi.img"
+		fi
+		# hybrid
+		if [ "${LIVE_IMAGE_TYPE}" = "iso-hybrid" ]
+		then
+			XORRISO_OPTIONS="${XORRISO_OPTIONS} --grub2-boot-info --grub2-mbr binary/boot/grub/grub_hybrid"
+		fi
+		#if [ "${LB_BINARY_IMAGES}" = "iso-hybrid" ]; then
+		#if [ 1 ]; then
+		#	XORRISO_OPTIONS="${XORRISO_OPTIONS} --embedded-boot binary/boot/grub/grub_hybrid"
+		#fi
 		XORRISO_EXCLUDE="boot/grub/grub_eltorito"
 		;;
 
@@ -174,6 +190,9 @@ grub-mkimage -d \${input_dir} -o \${core_img} -O i386-pc biosdisk iso9660
 
 # build grub_eltorito image
 cat \${input_dir}/cdboot.img \${core_img} > binary/boot/grub/grub_eltorito
+
+# build grub_hybrid image
+cat \${input_dir}/boot.img \${core_img} > binary/boot/grub/grub_hybrid
 
 rm -f \${core_img}
 
