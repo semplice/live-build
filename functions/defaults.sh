@@ -70,9 +70,9 @@ New_configuration ()
 	export LB_ARCHIVE_AREAS
 
 	# Image: Archive Areas
-	LIVE_IMAGE_PARENT_ARCHIVE_AREAS="${LIVE_IMAGE_PARENT_ARCHIVE_AREAS:-$(Get_configuration config/build Parent-Archive-Areas)}"
-	LIVE_IMAGE_PARENT_ARCHIVE_AREAS="${LIVE_IMAGE_PARENT_ARCHIVE_AREAS:-${LB_ARCHIVE_AREAS}}"
-	export LIVE_IMAGE_PARENT_ARCHIVE_AREAS
+	LB_PARENT_ARCHIVE_AREAS="${LB_PARENT_ARCHIVE_AREAS:-$(Get_configuration config/build Parent-Archive-Areas)}"
+	LB_PARENT_ARCHIVE_AREAS="${LB_PARENT_ARCHIVE_AREAS:-${LB_ARCHIVE_AREAS}}"
+	export LB_PARENT_ARCHIVE_AREAS
 
 	# Image: Type
 	LIVE_IMAGE_TYPE="${LIVE_IMAGE_TYPE:-$(Get_configuration config/build Type)}"
@@ -589,7 +589,15 @@ Set_defaults ()
 					;;
 
 				*)
-					LB_LINUX_FLAVOURS="${LB_LINUX_FLAVOURS:-486}"
+					case "${LB_PARENT_DISTRIBUTION}" in
+						wheezy)
+							LB_LINUX_FLAVOURS="${LB_LINUX_FLAVOURS:-486}"
+							;;
+
+						*)
+							LB_LINUX_FLAVOURS="${LB_LINUX_FLAVOURS:-586}"
+							;;
+					esac
 					;;
 			esac
 			;;
@@ -669,7 +677,7 @@ Set_defaults ()
 
 	# Setting security updates option
 	case "${LB_PARENT_DISTRIBUTION}" in
-		jessie|sid)
+		sid)
 			LB_SECURITY="${LB_SECURITY:-false}"
 			;;
 
@@ -680,7 +688,7 @@ Set_defaults ()
 
 	# Setting updates updates option
 	case "${LB_PARENT_DISTRIBUTION}" in
-		jessie|sid)
+		sid)
 			LB_UPDATES="${LB_UPDATES:-false}"
 			;;
 
